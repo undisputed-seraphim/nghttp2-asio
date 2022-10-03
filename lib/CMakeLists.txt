@@ -36,11 +36,9 @@ set(NGHTTP2_ASIO_SOURCES
   asio_client_tls_context.cc
 )
 
-add_library(nghttp2_asio SHARED
-  ${NGHTTP2_ASIO_SOURCES}
-  $<TARGET_OBJECTS:url-parser>
-)
-target_include_directories(nghttp2_asio PRIVATE
+add_library(nghttp2_asio_i INTERFACE EXCLUDE_FROM_ALL)
+
+target_include_directories(nghttp2_asio_i INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/includes"
   "${CMAKE_CURRENT_SOURCE_DIR}/../third-party"
 
@@ -48,18 +46,30 @@ target_include_directories(nghttp2_asio PRIVATE
   ${OPENSSL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
-target_include_directories(nghttp2_asio INTERFACE
+target_include_directories(nghttp2_asio_i INTERFACE
   "${CMAKE_CURRENT_BINARY_DIR}/../lib/includes"
   "${CMAKE_CURRENT_SOURCE_DIR}/../lib/includes"
   "${CMAKE_CURRENT_SOURCE_DIR}/includes"
 )
-target_link_libraries(nghttp2_asio
+target_link_libraries(nghttp2_asio_i INTERFACE
   ${LIBNGHTTP2_LIBRARIES}
   ${OPENSSL_LIBRARIES}
   ${Boost_LIBRARIES}
 )
-set_target_properties(nghttp2_asio PROPERTIES
+set_target_properties(nghttp2_asio_i PROPERTIES
   VERSION ${LT_VERSION} SOVERSION ${LT_SOVERSION})
+
+add_library(nghttp2_asio SHARED
+  ${NGHTTP2_ASIO_SOURCES}
+  $<TARGET_OBJECTS:url-parser>
+)
+target_link_libraries(nghttp2_asio PUBLIC nghttp2_asio_i)
+
+add_library(nghttp2_asio_s STATIC
+  ${NGHTTP2_ASIO_SOURCES}
+  $<TARGET_OBJECTS:url-parser>
+)
+target_link_libraries(nghttp2_asio_s PUBLIC nghttp2_asio_i)
 
 install(TARGETS nghttp2_asio
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
